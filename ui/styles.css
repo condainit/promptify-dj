@@ -1,0 +1,306 @@
+/* Application layout and spacing */
+.stApp {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow-y: auto !important;
+    height: 100vh !important;
+}
+
+.stApp > header,
+.stApp > div,
+.main .block-container,
+.main .block-container > div:first-child {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Content centering and layout */
+.main {
+    min-height: calc(100vh - 60px) !important;
+    display: flex !important;
+    justify-content: center !important;
+    padding-top: 0.5rem !important;
+    margin-top: 60px !important;
+    width: 100% !important;
+}
+
+/* Primary content container */
+.main .block-container,
+.stApp .main .block-container {
+    max-width: 50vw !important;
+    min-width: 600px !important;
+    margin: 0 auto !important;
+    padding: 1rem 2rem 2rem 2rem !important;
+    background: transparent !important;
+    border-radius: 12px !important;
+    padding-bottom: 4rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+/* Typography styles */
+.main-title {
+    font-size: 2.8rem;
+    font-weight: 700;
+    text-align: center;
+    color: #1DB954 !important;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+}
+
+.sub-header {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.main-question {
+    text-align: center;
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+/* Interactive components */
+.track-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    border-left: 3px solid #1DB954;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.track-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+
+/* Status indicators */
+.success-message {
+    background: #f8f9fa;
+    border: 1px solid #1DB954;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+/* Button styling */
+.stButton > button {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.stButton > button:hover {
+    transform: translateY(-1px);
+}
+
+.stButton > button[data-testid="baseButton-primary"],
+.stButton > button[kind="primary"] {
+    background-color: #1DB954 !important;
+    border-color: #1DB954 !important;
+    color: white !important;
+}
+
+.stButton > button:disabled {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    color: white !important;
+    opacity: 0.6 !important;
+}
+
+/* Streamlit component overrides */
+.stProgress > div > div > div > div {
+    background-color: #1DB954;
+}
+
+.stAudio {
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+/* Center spinner messages */
+.stSpinner > div {
+    text-align: center !important;
+} 
+
+/* Spotify embedded player styling */
+iframe[src*="open.spotify.com"] {
+    border-radius: 12px !important;
+    margin: 0.5rem 0 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+}
+
+/* WebRTC component styling */
+.stWebRTC {
+    background: transparent !important;
+}
+
+.stWebRTC > div {
+    background: transparent !important;
+}
+
+/* Fixed footer at bottom */
+footer {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: transparent !important;
+    border-top: none !important;
+    z-index: 1000 !important;
+}
+
+/* Track display improvements */
+.track-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    border-left: 3px solid #1DB954;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+} 
+
+/* Text input styling */
+.stTextArea textarea {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 15px;
+    font-size: 16px;
+    background-color: #fafafa;
+    transition: border-color 0.3s ease;
+}
+
+.stTextArea textarea:focus {
+    border: none;
+    background-color: white;
+    box-shadow: none;
+    outline: none;
+}
+
+.stTextArea textarea::placeholder {
+    color: #999;
+    font-style: italic;
+}
+
+/* Section title styling */
+.section-title {
+    color: #333;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 30px 0 15px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #f0f0f0;
+} 
+
+/* Tab styling */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 8px;
+}
+
+.stTabs [data-baseweb="tab"] {
+    background-color: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+    border: 1px solid #e9ecef;
+    padding: 12px 20px;
+    font-weight: 500;
+    color: #666;
+    transition: all 0.2s ease;
+}
+
+.stTabs [data-baseweb="tab"][aria-selected="true"] {
+    background-color: white;
+    color: #1DB954;
+    border-bottom-color: white;
+    box-shadow: 0 -2px 0 #1DB954;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+    background-color: #e9ecef;
+    color: #333;
+}
+
+/* Audio recorder component styling */
+.stApp iframe {
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+} 
+
+/* Subtitle styling */
+.subtitle,
+p.subtitle {
+    text-align: center;
+    font-size: 1.3rem !important;
+    color: #666 !important;
+    margin-bottom: 2rem !important;
+    font-weight: 400 !important;
+}
+
+/* Sidebar styling */
+.sidebar-title {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    border-bottom: 2px solid #1DB954;
+    padding-bottom: 0.5rem;
+}
+
+/* Sidebar content styling */
+.sidebar .stMarkdown {
+    font-size: 0.7rem;
+}
+
+.sidebar .stMetric {
+    margin-bottom: 0.2rem;
+}
+
+.sidebar .stMetric > div {
+    font-size: 0.65rem !important;
+}
+
+.sidebar .stMetric > div > div {
+    font-size: 0.6rem !important;
+}
+
+.sidebar .stProgress {
+    margin: 0.15rem 0;
+}
+
+/* Make subheaders smaller in sidebar */
+.sidebar h3 {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.3rem !important;
+}
+
+.sidebar h4 {
+    font-size: 0.8rem !important;
+    margin-bottom: 0.2rem !important;
+}
+
+/* Make sidebar scrollable */
+.sidebar .css-1d391kg {
+    overflow-y: auto;
+    max-height: calc(100vh - 100px);
+}
+
+/* Ensure sidebar is on the right */
+.sidebar .css-1d391kg {
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 300px;
+    height: 100vh;
+    overflow-y: auto;
+    background: white;
+    border-left: 1px solid #e0e0e0;
+    padding: 1rem;
+} 
