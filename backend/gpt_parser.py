@@ -7,7 +7,7 @@ import json
 from typing import Dict, Any
 from openai import OpenAI
 from loguru import logger
-from app.config import Config
+from config import Config
 
 class IntentParser:
     """Parser for extracting structured intent from text using GPT-3.5."""

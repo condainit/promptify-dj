@@ -1,5 +1,5 @@
+.cache
 .env
-api/__pycache__/
-app/__pycache__/
-ui/__pycache__/
+backend/__pycache__/
+frontend/node_modules/
 logs/

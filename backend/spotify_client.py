@@ -7,7 +7,7 @@ from typing import Dict, List, Optional, Any
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials
 from loguru import logger
-from app.config import Config
+from config import Config
 
 class SpotifyClient:
     """Client for interacting with Spotify Web API."""
@@ -120,8 +120,9 @@ class SpotifyClient:
                         'uri': track['uri'],
                         'popularity': track['popularity'],
                         'duration_ms': track['duration_ms'],
-                        'external_url': track['external_urls']['spotify'],
-                        'preview_url': track['preview_url']
+                        'spotify_url': track['external_urls']['spotify'],
+                        'preview_url': track['preview_url'],
+                        'album_art_url': track['album']['images'][0]['url'] if track['album']['images'] and len(track['album']['images']) > 0 else None
                     }
                     formatted_tracks.append(formatted_track)
                 except (KeyError, IndexError) as e:
@@ -138,7 +139,7 @@ class SpotifyClient:
             logger.error(f"Spotify client initialized: {self.sp is not None}")
             return []
     
-    def create_playlist(self, name: str, description: str, track_uris: List[str]) -> Optional[str]:
+    def create_playlist(self, name: str, description: str, track_uris: List[str]) -> Optional[Dict[str, Any]]:
         """
         Create a new playlist and add tracks.
         
@@ -148,7 +149,7 @@ class SpotifyClient:
             track_uris: List of Spotify track URIs
             
         Returns:
-            Playlist URL if successful, None otherwise
+            Playlist info dict if successful, None otherwise
         """
         try:
             if not self.use_user_auth:
@@ -156,8 +157,11 @@ class SpotifyClient:
                 return None
             
             if self.sp is None or self.user_id is None:
+                logger.info("Spotify client not authenticated, attempting authentication...")
                 if not self.authenticate():
+                    logger.error("Failed to authenticate with Spotify")
                     return None
+                logger.info("Successfully authenticated with Spotify")
             
             logger.info(f"Creating playlist: {name}")
             
@@ -181,8 +185,124 @@ class SpotifyClient:
                     self.sp.playlist_add_items(playlist_id, chunk)
             
             logger.info(f"Created playlist: {playlist_url}")
-            return playlist_url
+            playlist_info = {
+                'id': playlist_id,
+                'name': playlist['name'],
+                'url': playlist_url,
+                'description': playlist['description']
+            }
+            logger.info(f"Returning playlist info: {playlist_info}")
+            return playlist_info
             
         except Exception as e:
             logger.error(f"Playlist creation failed: {e}")
             return None
+
+    def _clean_playlist_id(self, playlist_id: str) -> str:
+        """
+        Clean playlist ID from URL or other formats.
+        
+        Args:
+            playlist_id: Playlist ID (could be from URL or direct ID)
+            
+        Returns:
+            Clean playlist ID
+        """
+        # If it's a full URL, extract the ID
+        if 'playlist/' in playlist_id:
+            try:
+                return playlist_id.split('playlist/')[-1].split('?')[0]
+            except:
+                pass
+        
+        # If it's a Spotify URI, extract the ID
+        if playlist_id.startswith('spotify:playlist:'):
+            return playlist_id.split(':')[-1]
+        
+        # Otherwise, assume it's already a clean ID
+        return playlist_id
+
+    def update_playlist_name(self, playlist_id: str, new_name: str) -> bool:
+        """
+        Update the name of a Spotify playlist.
+        
+        Args:
+            playlist_id: Spotify playlist ID
+            new_name: New playlist name
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            if not self.use_user_auth:
+                logger.error("User authentication required for playlist updates")
+                return False
+            
+            if self.sp is None or self.user_id is None:
+                if not self.authenticate():
+                    return False
+            
+            # Clean the playlist ID
+            clean_playlist_id = self._clean_playlist_id(playlist_id)
+            logger.info(f"Original playlist ID: {playlist_id}, Cleaned ID: {clean_playlist_id}")
+            
+            logger.info(f"Updating playlist {clean_playlist_id} name to: {new_name}")
+            
+            # First, get the current playlist to verify it exists and we have access
+            try:
+                current_playlist = self.sp.playlist(clean_playlist_id)
+                logger.info(f"Current playlist: {current_playlist.get('name', 'Unknown')}")
+            except Exception as e:
+                logger.error(f"Failed to get current playlist: {e}")
+                return False
+            
+            # Update playlist details
+            try:
+                result = self.sp.playlist_change_details(
+                    playlist_id=clean_playlist_id,
+                    name=new_name
+                )
+                logger.info(f"Successfully updated playlist name to: {new_name}")
+                return True
+                
+            except Exception as e:
+                logger.error(f"Failed to update playlist details: {e}")
+                return False
+            
+        except Exception as e:
+            logger.error(f"Playlist name update failed: {e}")
+            return False
+
+    def delete_playlist(self, playlist_id: str) -> bool:
+        """
+        Delete a Spotify playlist.
+        
+        Args:
+            playlist_id: Spotify playlist ID
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            if not self.use_user_auth:
+                logger.error("User authentication required for playlist deletion")
+                return False
+            
+            if self.sp is None or self.user_id is None:
+                if not self.authenticate():
+                    return False
+            
+            # Clean the playlist ID
+            clean_playlist_id = self._clean_playlist_id(playlist_id)
+            logger.info(f"Original playlist ID: {playlist_id}, Cleaned ID: {clean_playlist_id}")
+            logger.info(f"Deleting playlist: {clean_playlist_id}")
+            
+            # Unfollow/delete the playlist
+            self.sp.current_user_unfollow_playlist(clean_playlist_id)
+            
+            logger.info(f"Successfully deleted playlist")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Playlist deletion failed: {e}")
+            return False

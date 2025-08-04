@@ -13,12 +13,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from loguru import logger
 
-# Add root path for app imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add current directory for app imports
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from app.config import Config
-from app.whisper_interface import WhisperInterface
-from app.playlist_builder import PlaylistBuilder
+from config import Config
+from whisper_interface import WhisperInterface
+from playlist_builder import PlaylistBuilder
 
 # --- FastAPI App Initialization ---
 app = FastAPI(
@@ -46,6 +46,8 @@ class PlaylistResponse(BaseModel):
     parsed_intent: dict
     tracks: list
     playlist_url: Optional[str]
+    playlist_id: Optional[str]
+    playlist_name: Optional[str]
     generated_at: str
     total_tracks: int
 
@@ -53,6 +55,18 @@ class AudioRecordingRequest(BaseModel):
     audio_data: str
     audio_format: str = "webm"
     create_playlist: bool = True
+
+class RefinementRequest(BaseModel):
+    track_id: str
+    action: str
+    playlist_id: Optional[str] = None
+
+class PlaylistUpdateRequest(BaseModel):
+    playlist_id: str
+    new_name: str
+
+class PlaylistDeleteRequest(BaseModel):
+    playlist_id: str
 
 # --- Startup ---
 @app.on_event("startup")
@@ -77,6 +91,7 @@ async def root():
             "/generate_playlist",
             "/transcribe",
             "/parse_intent",
+            "/refine",
             "/health"
         ]
     }
@@ -159,6 +174,66 @@ async def parse_intent_only(transcript: str = Form(...)):
         logger.error(f"Intent parsing failed: {e}")
         logger.error(f"Transcript: {transcript[:100]}...")
         raise HTTPException(500, detail=f"Intent parsing failed: {str(e)}")
+
+@app.post("/refine")
+async def refine_playlist(request: RefinementRequest):
+    """Handle user refinement feedback for playlist generation.
+    
+    Note: This endpoint currently logs feedback for future implementation.
+    Future versions will use this data to improve playlist recommendations.
+    """
+    try:
+        logger.info(f"Refinement request: {request.action} for track {request.track_id}")
+        return {
+            "status": "success",
+            "message": f"Refinement recorded: {request.action}",
+            "track_id": request.track_id,
+            "action": request.action,
+            "note": "Feedback logged for future playlist improvements"
+        }
+    except Exception as e:
+        logger.error(f"Refinement failed: {e}")
+        raise HTTPException(500, detail=f"Refinement failed: {str(e)}")
+
+@app.put("/playlist/update")
+async def update_playlist_name(request: PlaylistUpdateRequest):
+    """Update the name of a Spotify playlist."""
+    try:
+        logger.info(f"Updating playlist {request.playlist_id} name to: {request.new_name}")
+        
+        spotify_client = playlist_builder.spotify_client
+        
+        success = spotify_client.update_playlist_name(request.playlist_id, request.new_name)
+        
+        if success:
+            logger.info(f"Successfully updated playlist {request.playlist_id} name to: {request.new_name}")
+            return {"status": "success", "message": "Playlist name updated"}
+        else:
+            logger.error(f"Spotify client returned False for playlist update")
+            raise HTTPException(status_code=500, detail="Failed to update playlist name")
+            
+    except Exception as e:
+        logger.error(f"Playlist update failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/playlist/delete")
+async def delete_playlist(request: PlaylistDeleteRequest):
+    """Delete a Spotify playlist."""
+    try:
+        logger.info(f"Deleting playlist: {request.playlist_id}")
+        
+        spotify_client = playlist_builder.spotify_client
+        
+        success = spotify_client.delete_playlist(request.playlist_id)
+        
+        if success:
+            return {"status": "success", "message": "Playlist deleted"}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to delete playlist")
+            
+    except Exception as e:
+        logger.error(f"Playlist deletion failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # --- Global Error Handler ---
 @app.exception_handler(Exception)

@@ -7,9 +7,9 @@ import random
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 from loguru import logger
-from app.config import Config
-from app.spotify_client import SpotifyClient
-from app.gpt_parser import IntentParser
+from config import Config
+from spotify_client import SpotifyClient
+from gpt_parser import IntentParser
 
 class PlaylistBuilder:
     """Builder for creating personalized playlists based on user intent."""
@@ -70,21 +70,33 @@ class PlaylistBuilder:
             logger.info("Step 3: Curating playlist")
             curated_tracks = self._curate_playlist(tracks, intent)
             
-            playlist_url = None
+            playlist_info = None
             if create_spotify_playlist and curated_tracks:
                 logger.info("Step 4: Creating Spotify playlist")
-                playlist_url = self._create_spotify_playlist(curated_tracks, intent)
-            playlist_info = {
+                try:
+                    playlist_info = self._create_spotify_playlist(curated_tracks, intent)
+                    if playlist_info:
+                        logger.info(f"Successfully created Spotify playlist: {playlist_info.get('name', 'Unknown')}")
+                    else:
+                        logger.warning("Spotify playlist creation returned None")
+                except Exception as e:
+                    logger.error(f"Failed to create Spotify playlist: {e}")
+                    playlist_info = None
+            
+            response = {
                 "transcript": transcript,
                 "parsed_intent": intent,
                 "tracks": curated_tracks,
-                "playlist_url": playlist_url,
+                "playlist_url": playlist_info.get('url') if playlist_info else None,
+                "playlist_id": playlist_info.get('id') if playlist_info else None,
+                "playlist_name": playlist_info.get('name') if playlist_info else None,
                 "generated_at": datetime.now().isoformat(),
                 "total_tracks": len(curated_tracks)
             }
             
+            logger.info(f"Generated playlist response: {response}")
             logger.info(f"Playlist generation completed. {len(curated_tracks)} tracks selected")
-            return playlist_info
+            return response
             
         except Exception as e:
             logger.error(f"Playlist generation failed: {e}")
@@ -194,7 +206,7 @@ class PlaylistBuilder:
             logger.error(f"Score calculation failed: {e}")
             return 0.5
     
-    def _create_spotify_playlist(self, tracks: List[Dict[str, Any]], intent: Dict[str, Any]) -> Optional[str]:
+    def _create_spotify_playlist(self, tracks: List[Dict[str, Any]], intent: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
         Create a Spotify playlist with the selected tracks.
         
@@ -203,7 +215,7 @@ class PlaylistBuilder:
             intent: Enhanced intent dictionary
             
         Returns:
-            Playlist URL if successful, None otherwise
+            Playlist info dict if successful, None otherwise
         """
         try:
             if not tracks:
@@ -213,13 +225,13 @@ class PlaylistBuilder:
             playlist_description = self._generate_playlist_description(intent, tracks)
             
             track_uris = [track['uri'] for track in tracks if track.get('uri')]
-            playlist_url = self.spotify_client.create_playlist(
+            playlist_info = self.spotify_client.create_playlist(
                 name=playlist_name,
                 description=playlist_description,
                 track_uris=track_uris
             )
             
-            return playlist_url
+            return playlist_info
             
         except Exception as e:
             logger.error(f"Spotify playlist creation failed: {e}")
@@ -241,7 +253,7 @@ class PlaylistBuilder:
                 first_query = search_queries[0]
                 clean_name = first_query.replace('artist:', '').replace('track:', '').replace('genre:', '').replace('year:', '')
                 clean_name = clean_name.replace('"', '').strip()
-                playlist_name = f"{clean_name.title()} Vibes"
+                playlist_name = clean_name.title()
             else:
                 playlist_name = "Promptify DJ Playlist"
             

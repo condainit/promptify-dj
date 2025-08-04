@@ -10,7 +10,7 @@ from loguru import logger
 import whisper
 import librosa
 import soundfile as sf
-from app.config import Config
+from config import Config
 
 
 class WhisperInterface:

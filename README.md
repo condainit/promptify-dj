@@ -1,38 +1,29 @@
 # Promptify DJ
 
-AI-powered Spotify playlist generator that transforms voice or text prompts into personalized playlists using OpenAI Whisper, GPT-3.5, and the Spotify Web API.
+Generate Spotify playlists from voice or text prompts using OpenAI Whisper (speech-to-text), GPT-3.5, and the Spotify Web API. Built with a React frontend and FastAPI backend.
 
 ## Demo
 
-[![Promptify DJ Demo](https://img.youtube.com/vi/4dHHsrARAig/maxresdefault.jpg)](https://youtu.be/4dHHsrARAig)
-
-## Tech Stack
-- **Frontend**: Streamlit web application with audio file upload, text input, and playlist display
-- **Backend**: FastAPI REST API with 6 endpoints handling audio processing, intent parsing, and playlist generation
-- **AI/ML**: OpenAI Whisper for speech-to-text conversion and GPT-3.5 for intelligent search query generation
-- **Music**: Spotify API for track search and playlist creation
-- **Audio Processing**: librosa and soundfile for audio manipulation
-
-## Data Flow
-
-- **Input**: Audio file upload or text prompt
-- **Transcription**: Audio -> Whisper -> Transcript
-- **Analysis**: Text -> GPT-3.5 -> Search Queries
-- **Curation**: Search Queries -> Spotify API ([`GET /search`](https://developer.spotify.com/documentation/web-api/reference/search)) -> Track Selection
-- **Playlist**: Selected Tracks -> Spotify API ([`POST /users/{user_id}/playlists`](https://developer.spotify.com/documentation/web-api/reference/create-playlist), [`POST /playlists/{playlist_id}/tracks`](https://developer.spotify.com/documentation/web-api/reference/add-tracks-to-playlist)) -> Playlist URL
+[![Promptify DJ Demo](https://img.youtube.com/vi/jjFugV6u2do/maxresdefault.jpg)](https://youtu.be/jjFugV6u2do)
 
 ## FastAPI Endpoints
 
-- `GET /` - API information and available endpoints
-- `GET /health` - Health check
-- `POST /process_audio_recording` - Full audio-to-playlist pipeline
-- `POST /generate_playlist` - Text-to-playlist pipeline
-- `POST /transcribe` - Audio-to-text only
-- `POST /parse_intent` - Text-to-intent only
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/` | API information and available endpoints |
+| `GET` | `/health` | Health check |
+| `POST` | `/process_audio_recording` | Full audio-to-playlist pipeline |
+| `POST` | `/generate_playlist` | Text-to-playlist pipeline |
+| `POST` | `/transcribe` | Audio-to-text only |
+| `POST` | `/parse_intent` | Text-to-intent only |
+| `POST` | `/refine` | User feedback for playlist refinement (in development) |
+| `PUT` | `/playlist/{playlist_id}/name` | Update playlist name |
+| `DELETE` | `/playlist/{playlist_id}` | Delete playlist |
 
 ## Prerequisites
 
 - Python 3.11
+- Node.js 16+ and npm
 - Spotify Developer Account
 - OpenAI API Key
 - Conda (recommended for environment management)
@@ -44,8 +35,15 @@ AI-powered Spotify playlist generator that transforms voice or text prompts into
    ```bash
    git clone https://github.com/condainit/promptify-dj.git
    cd promptify-dj
+   
+   # Setup Python environment
    conda env create -f environment.yml
    conda activate promptify-dj-env
+   
+   # Setup React frontend
+   cd frontend
+   npm install
+   cd ..
    ```
 
 2. **Configure Environment**
@@ -61,19 +59,19 @@ AI-powered Spotify playlist generator that transforms voice or text prompts into
 
    **a.** Start the backend server:
    ```bash
-   uvicorn api.main:app --reload
+   uvicorn backend.main:app --reload
    ```
    
-   **b.** In a new terminal, start the frontend:
+   **b.** In a new terminal, start the React frontend:
    ```bash
    conda activate promptify-dj-env
-   streamlit run ui/streamlit_app.py
+   cd frontend
+   npm start
    ```
    
-   **c.** Open your browser and navigate to [http://localhost:8501](http://localhost:8501)
+   **c.** Open your browser and navigate to [http://localhost:3000](http://localhost:3000)
 
-4. **Generate Playlist**
+4. **Generate Your First Playlist**
 
-   Input an audio file or text prompt, then click the corresponding "Generate Playlist" button. 
-   
-   > **Note**: For examples, try the audio files in the `examples/` directory or click the text prompt buttons.
+   - **Voice Input**: Click the microphone button to record your request
+   - **Text Input**: Type your request in the search bar or click a recommended prompt
